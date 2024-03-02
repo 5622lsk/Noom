@@ -11,6 +11,8 @@ call.hidden = true;
 let myStream; //오디오 +  비디오
 let muted = false; //처음엔 소리 나는 상태로 시작
 let cameraOff = false; //카메라 킨상태로 시작
+let roomName;
+let myPeerConnection;
 
 async function getCameras(){
   try {
@@ -90,17 +92,39 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia(){
+async function startMedia(){
   welcome.hidden = true;
   call.hidden = false;
-  getMedia();
+  await getMedia();
+  makeConnection();
 }
 
 function handelWelcomeSubmit(event){
   event.preventDefault(); //폼 제출 전까지 새로고침 방지
   const input = welcomeForm.querySelector("input");
   socket.emit("join_room", input.value, startMedia);
+  roomName = input.value;
   input.value = "";
 }
 
 welcomeForm.addEventListener("submit", handelWelcomeSubmit);
+
+//Scoket code(offer 주고받기)
+  //peer A
+socket.on("welcome", async()=>{
+  const offer = await myPeerConnection.createOffer();
+  myPeerConnection.setLocalDescription(offer)
+  socket.emit("offer", offer, roomName)
+});
+  //peer B
+socket.on("offer", offer => {
+  console.log(offer);
+})
+
+//RTC code
+function makeConnection(){
+  myPeerConnection = new RTCPeerConnection();
+  myStream
+    .getTracks()
+    .forEach(track => myPeerConnection.addTrack(track, myStream));
+}
