@@ -16,13 +16,16 @@ const httpServer = http.createServer(app); //1.http서버를 만든다.
 const wsServer = new Server(httpServer)  //2.새로운 웹소켓을 쌓아올리며 만든다.
 
 wsServer.on("connection", (socket) => {
-    socket.on("join_room", (roomName, done) => {
+    socket.on("join_room", (roomName) => {
         socket.join(roomName);
         done();
         socket.to(roomName).emit("welcome");
     });
     socket.on("offer", (offer,roomName) => {
         socket.to(roomName).emit("offer", offer);
+    })
+    socket.on("answer", (answer, roomName)=>{
+        socket.to(roomName).emit("answer", answer);
     })
 })
 
